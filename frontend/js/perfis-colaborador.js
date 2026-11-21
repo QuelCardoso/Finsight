@@ -132,7 +132,7 @@
                     event.preventDefault();
                     event.stopImmediatePropagation();
                     const esperado = CREDENCIAIS[perfilEscolhido]?.usuario || "admin@2026";
-                    exibirErroLogin(`Usuário ou senha inválidos para ${perfilEscolhido === "gerente" ? "Gerente" : "Admin"}. Use ${esperado} e a mesma senha.`);
+                    exibirErroLogin("Login ou senha incorretos.");
                     return false;
                 }
 

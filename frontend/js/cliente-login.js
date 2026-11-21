@@ -27,7 +27,7 @@ async function handleClienteLogin(event) {
     });
 
     if (!clienteEncontrado) {
-        erroEl.innerText = "Credenciais inválidas. Exemplo: Cliente 01 e senha Cliente01@123.";
+        erroEl.innerText = "Login ou senha incorretos.";
         erroEl.style.display = "block";
         return;
     }
