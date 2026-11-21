@@ -1,0 +1,162 @@
+/* Tipografia base mais legível e controles de acessibilidade */
+html {
+    font-size: 16px;
+}
+
+body {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.topbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.a11y-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #F1F5F9;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid #CBD5E1;
+}
+
+.a11y-btn {
+    background: #FFFFFF;
+    color: #0F172A;
+    border: 1px solid #94A3B8;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.a11y-btn:hover,
+.a11y-btn:focus {
+    background: #0066FF;
+    color: #FFFFFF;
+    outline: 3px solid #38BDF8;
+    outline-offset: 1px;
+}
+
+/* Foco visível para navegação por teclado */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid #0066FF;
+    outline-offset: 2px;
+}
+
+/* Ajuste proporcional para componentes internos acompanharem o html font-size */
+.nav-item {
+    font-size: 1rem !important;
+    padding: 14px 20px !important;
+}
+
+table th {
+    font-size: 0.875rem !important;
+}
+
+table td {
+    font-size: 0.95rem !important;
+}
+
+.card-metric h4 {
+    font-size: 0.9rem !important;
+}
+
+.card-metric .value {
+    font-size: 1.65rem !important;
+}
+
+.input-group label {
+    font-size: 0.95rem !important;
+}
+
+.input-group input,
+.input-group select,
+.search-bar input,
+.btn-primary,
+.btn-add {
+    font-size: 1rem !important;
+}
+
+/* Modo Alto Contraste para baixa visão */
+body.high-contrast {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+}
+
+body.high-contrast .main-content,
+body.high-contrast .content-body,
+body.high-contrast .auth-container {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+}
+
+body.high-contrast .topbar,
+body.high-contrast .card-metric,
+body.high-contrast .table-container,
+body.high-contrast .modal-box,
+body.high-contrast .auth-card,
+body.high-contrast [style*="background: white"],
+body.high-contrast [style*="background:white"] {
+    background: #0A0A0A !important;
+    color: #FFFFFF !important;
+    border: 2px solid #FFD60A !important;
+}
+
+body.high-contrast .sidebar {
+    background: #000000 !important;
+    border-right: 2px solid #FFD60A !important;
+}
+
+body.high-contrast .nav-item {
+    color: #FFFFFF !important;
+}
+
+body.high-contrast .nav-item.active,
+body.high-contrast .nav-item:hover {
+    background: #FFD60A !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+body.high-contrast table th {
+    background: #1A1A1A !important;
+    color: #FFD60A !important;
+    border-bottom: 2px solid #FFD60A !important;
+}
+
+body.high-contrast table td {
+    color: #FFFFFF !important;
+    border-bottom: 1px solid #555555 !important;
+}
+
+body.high-contrast small,
+body.high-contrast [style*="var(--text-muted)"] {
+    color: #E2E8F0 !important;
+}
+
+body.high-contrast input,
+body.high-contrast select {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+    border: 2px solid #FFD60A !important;
+}
+
+body.high-contrast .btn-primary,
+body.high-contrast .btn-add,
+body.high-contrast .a11y-btn {
+    background: #FFD60A !important;
+    color: #000000 !important;
+    border: 2px solid #FFFFFF !important;
+    font-weight: 800 !important;
+}
