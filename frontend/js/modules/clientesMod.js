@@ -116,6 +116,7 @@ function filtrarClientes() {
 }
 
 function abrirModalCliente() {
+    garantirCamposAcessoClienteNoModal();
     document.getElementById('form-cliente').reset();
     document.getElementById('cliente-id').value = '';
     document.getElementById('modal-cliente-titulo').innerText = 'Cadastrar Novo Cliente';
@@ -127,6 +128,7 @@ function fecharModalCliente() {
 }
 
 function salvarCliente(event) {
+    garantirCamposAcessoClienteNoModal();
     event.preventDefault();
     const db = getDB();
     const empId = getCurrentEmpresaId();
@@ -140,6 +142,8 @@ function salvarCliente(event) {
         email: document.getElementById('cli-email').value.trim(),
         limite: parseFloat(document.getElementById('cli-limite').value) || 0,
         situacao: document.getElementById('cli-situacao').value,
+        usuario: document.getElementById('cli-usuario').value.trim(),
+        senha: document.getElementById('cli-senha').value,
         endereco: document.getElementById('cli-endereco').value.trim(),
         historico: document.getElementById('cli-historico').value.trim()
     };
@@ -181,4 +185,84 @@ function excluirCliente(id) {
     db[empId].clientes = (db[empId].clientes || []).filter(c => c.id !== id);
     saveDB(db);
     filtrarClientes();
+}
+
+function garantirCamposAcessoClienteNoModal() {
+    const modal = document.getElementById('modal-cliente');
+    if (!modal) return;
+    const form = modal.querySelector('form');
+    if (!form || document.getElementById('cli-usuario')) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'cli-acesso-wrapper';
+    wrapper.innerHTML = `
+        <div class="input-group">
+            <label for="cli-usuario">Usuário / Login do Cliente *</label>
+            <input type="text" id="cli-usuario" required placeholder="Ex: mariana.costa">
+        </div>
+        <div class="input-group">
+            <label for="cli-senha">Senha de Acesso do Cliente *</label>
+            <input type="password" id="cli-senha" required placeholder="Ex: Cliente@2026">
+        </div>
+    `;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        form.insertBefore(wrapper, submitBtn);
+    } else {
+        form.appendChild(wrapper);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(garantirCamposAcessoClienteNoModal, 200);
+});
+
+const _origRenderClientesModule = typeof renderClientesModule === 'function' ? renderClientesModule : null;
+if (_origRenderClientesModule) {
+    renderClientesModule = function(...args) {
+        const res = _origRenderClientesModule.apply(this, args);
+        garantirCamposAcessoClienteNoModal();
+        return res;
+    };
+}
+
+const _origSalvarCliente = typeof salvarCliente === 'function' ? salvarCliente : null;
+if (_origSalvarCliente) {
+    salvarCliente = function(event, ...rest) {
+        if (typeof garantirCamposAcessoClienteNoModal === 'function') {
+            garantirCamposAcessoClienteNoModal();
+        }
+        const usuarioInput = document.getElementById('cli-usuario');
+        const senhaInput = document.getElementById('cli-senha');
+        const docInput = document.getElementById('cli-documento') || document.getElementById('cli-cpf') || document.getElementById('cli-cnpj');
+        const emailInput = document.getElementById('cli-email');
+        const nomeInput = document.getElementById('cli-nome');
+
+        const res = _origSalvarCliente.apply(this, [event, ...rest]);
+
+        try {
+            const empId = getCurrentEmpresaId();
+            const db = getDB();
+            const lista = (db[empId] && db[empId].clientes) || [];
+            const uVal = (usuarioInput && usuarioInput.value ? usuarioInput.value.trim() : '') ||
+                         (emailInput && emailInput.value ? emailInput.value.trim() : '');
+            const sVal = senhaInput && senhaInput.value ? senhaInput.value : 'Cliente@2026';
+            const dVal = docInput && docInput.value ? docInput.value.trim() : '';
+            const nVal = nomeInput && nomeInput.value ? nomeInput.value.trim() : '';
+
+            const alvo = lista.find(c =>
+                (dVal && c.documento === dVal) ||
+                (nVal && c.nome === nVal)
+            ) || lista[0];
+
+            if (alvo) {
+                alvo.usuario = uVal || alvo.usuario || '';
+                alvo.senha = sVal;
+                saveDB(db);
+            }
+        } catch (_) {}
+
+        return res;
+    };
 }

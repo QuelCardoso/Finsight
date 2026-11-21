@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSight — Login Exclusivo do Cliente</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="a11y-font-normal">
+    <div id="auth-screen" class="auth-container" style="display:flex;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="brand-logo"><i class="fa-solid fa-user-check"></i> FinSight</div>
+                <p>Portal do Cliente — Histórico de Compras e Pagamentos</p>
+                <div class="a11y-toolbar" style="justify-content:center; margin-top:12px;">
+                    <button type="button" class="a11y-btn" onclick="changeFontSize(-1)" title="Diminuir fonte">A-</button>
+                    <button type="button" class="a11y-btn" onclick="changeFontSize(0)" title="Tamanho padrão">A</button>
+                    <button type="button" class="a11y-btn" onclick="changeFontSize(1)" title="Aumentar fonte">A+</button>
+                    <button type="button" class="a11y-btn" id="btn-contrast" onclick="toggleContrast()" title="Alternar alto contraste">
+                        <i class="fa-solid fa-circle-half-stroke"></i> Contraste
+                    </button>
+                </div>
+            </div>
+
+            <form id="cliente-login-form" onsubmit="handleClienteLogin(event)">
+                <div class="input-group">
+                    <label for="cli-login-empresa">Empresa</label>
+                    <select id="cli-login-empresa" required>
+                        <option value="1">Matriz Comercial Ltda</option>
+                        <option value="2">Distribuidora Bahia Sul</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="cli-login-usuario">Usuário ou E-mail do Cliente</label>
+                    <input type="text" id="cli-login-usuario" required placeholder="Ex: mariana.costa ou email">
+                </div>
+
+                <div class="input-group">
+                    <label for="cli-login-senha">Senha</label>
+                    <input type="password" id="cli-login-senha" required placeholder="Digite sua senha">
+                </div>
+
+                <p id="cli-login-erro" style="display:none; color:#DC2626; font-size:0.875rem; margin-bottom:12px; font-weight:600;"></p>
+
+                <button type="submit" class="btn-primary">Entrar na Minha Área</button>
+            </form>
+
+            <div style="margin-top:16px; text-align:center; font-size:0.875rem;">
+                <a href="index.html" style="color:var(--primary-blue); text-decoration:none; font-weight:600;">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar ao acesso da equipe
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        if (window.VLibras) {
+            new window.VLibras.Widget('https://vlibras.gov.br/app');
+        }
+    </script>
+    <script src="js/accessibility.js"></script>
+    <script src="js/state.js"></script>
+<script src="js/seed-clientes.js"></script>
+    <script src="js/cliente-login.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿* {
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -375,4 +375,16 @@ tr:hover {
 
 @media (max-width: 600px) {
     .form-grid { grid-template-columns: 1fr; }
+}
+
+
+.table-container {
+    overflow-x: auto;
+}
+#cli-acesso-wrapper .input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color, #CBD5E1);
+    border-radius: 6px;
+    box-sizing: border-box;
 }

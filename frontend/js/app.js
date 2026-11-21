@@ -1,24 +1,55 @@
 let dashboardChartInstance = null;
 
-function handleLogin(event) {
+function configurarMenuPorPerfil(ehCliente) {
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+        const onclickAttr = item.getAttribute('onclick') || '';
+        const ehSair = onclickAttr.includes('handleLogout');
+        const ehPortal = onclickAttr.includes("'portal'");
+        if (ehCliente) {
+            item.style.display = (ehPortal || ehSair) ? 'flex' : 'none';
+        } else {
+            item.style.display = 'flex';
+        }
+    });
+}
+
+async function handleLogin(event) {
     event.preventDefault();
     const empresaSelect = document.getElementById('empresa-select');
-    const empresaId = empresaSelect.value;
+    const empresaId = Number(empresaSelect.value);
     const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
+    const usuarioDigitado = (document.getElementById('usuario')?.value || '').trim().toLowerCase();
+    const senhaDigitada = document.getElementById('senha')?.value || '';
 
-    localStorage.setItem('finsight_empresa_ativa', empresaId);
+    localStorage.setItem(EMPRESA_KEY, String(empresaId));
+    await syncEmpresaFromApi(empresaId);
+
+    const dados = getEmpresaData();
+    const clienteMatch = (dados.clientes || []).find(c => {
+        const userMatch = (c.usuario && c.usuario.toLowerCase() === usuarioDigitado) ||
+                        (c.email && c.email.toLowerCase() === usuarioDigitado);
+        const senhaEsperada = c.senha || 'Cliente@2026';
+        return userMatch && senhaDigitada === senhaEsperada;
+    });
 
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'flex';
-    document.getElementById('empresa-logada-badge').innerText = empresaNome;
 
+    if (clienteMatch) {
+        setClienteAutenticado(clienteMatch);
+        configurarMenuPorPerfil(true);
+        document.getElementById('empresa-logada-badge').innerText = `Cliente: ${clienteMatch.nome}`;
+        switchModule('portal');
+        return;
+    }
+
+    limparSessaoCliente();
+    configurarMenuPorPerfil(false);
+    document.getElementById('empresa-logada-badge').innerText = empresaNome;
     switchModule('dashboard');
 }
 
-function handleLogout() {
-    document.getElementById('app-screen').style.display = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
-}
+
 
 function switchModule(moduleName) {
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -124,6 +155,11 @@ function switchModule(moduleName) {
     } else if (moduleName === 'financeiro') {
         titleEl.innerText = 'Controle Financeiro';
         renderFinanceiroModule();
+    } else if (moduleName === 'portal') {
+        titleEl.innerText = 'Minha Área — Histórico e Pagamentos';
+        if (typeof renderPortalClienteModule === 'function') {
+            renderPortalClienteModule();
+        }
     } else if (moduleName === 'inadimplencia') {
         titleEl.innerText = 'Controle de Inadimplência';
         if (typeof renderInadimplenciaModule === 'function') {
@@ -133,3 +169,83 @@ function switchModule(moduleName) {
         }
     }
 }
+
+function handleLogout() {
+    const eraCliente = sessionStorage.getItem('finsight_modo_cliente_exclusivo') === '1';
+    if (typeof limparSessaoCliente === 'function') {
+        limparSessaoCliente();
+    } else {
+        sessionStorage.removeItem('finsight_cliente_sessao');
+    }
+    sessionStorage.removeItem('finsight_modo_cliente_exclusivo');
+    if (typeof configurarMenuPorPerfil === 'function') {
+        configurarMenuPorPerfil(false);
+    }
+    if (eraCliente) {
+        window.location.href = 'login-cliente.html';
+        return;
+    }
+    const appEl = document.getElementById('app-screen');
+    const authEl = document.getElementById('auth-screen');
+    if (appEl) appEl.style.display = 'none';
+    if (authEl) authEl.style.display = 'flex';
+}
+
+function ativarSessaoClienteSeExistir() {
+    if (sessionStorage.getItem('finsight_modo_cliente_exclusivo') !== '1') return false;
+    const cli = typeof getClienteAutenticado === 'function' ? getClienteAutenticado() : null;
+    if (!cli) return false;
+
+    const authEl = document.getElementById('auth-screen');
+    const appEl = document.getElementById('app-screen');
+    if (authEl) authEl.style.display = 'none';
+    if (appEl) appEl.style.display = 'flex';
+    if (typeof configurarMenuPorPerfil === 'function') {
+        configurarMenuPorPerfil(true);
+    }
+    const badge = document.getElementById('empresa-logada-badge');
+    if (badge) badge.innerText = `Cliente: ${cli.nome}`;
+    switchModule('portal');
+    return true;
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(ativarSessaoClienteSeExistir, 50);
+    });
+} else {
+    setTimeout(ativarSessaoClienteSeExistir, 50);
+}
+
+function aplicarModoClienteExclusivoSeAtivo() {
+    if (sessionStorage.getItem('finsight_modo_cliente_exclusivo') !== '1') return false;
+    const cli = typeof getClienteAutenticado === 'function' ? getClienteAutenticado() : null;
+    if (!cli) return false;
+
+    const authEl = document.getElementById('auth-screen');
+    const appEl = document.getElementById('app-screen');
+    if (authEl) authEl.style.setProperty('display', 'none', 'important');
+    if (appEl) appEl.style.setProperty('display', 'flex', 'important');
+
+    if (typeof configurarMenuPorPerfil === 'function') {
+        configurarMenuPorPerfil(true);
+    }
+
+    const badge = document.getElementById('empresa-logada-badge');
+    if (badge) badge.innerText = `Cliente: ${cli.nome}`;
+
+    if (typeof renderPortalClienteModule === 'function') {
+        const titleEl = document.getElementById('current-module-title');
+        if (titleEl) titleEl.innerText = 'Minha Área — Histórico e Pagamentos';
+        renderPortalClienteModule();
+    } else if (typeof switchModule === 'function') {
+        switchModule('portal');
+    }
+    return true;
+}
+
+setInterval(() => {
+    if (sessionStorage.getItem('finsight_modo_cliente_exclusivo') === '1') {
+        aplicarModoClienteExclusivoSeAtivo();
+    }
+}, 250);

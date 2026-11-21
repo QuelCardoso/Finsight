@@ -454,9 +454,46 @@ def create_app():
         ).fetchone()
         db.session.commit()
         return jsonify({"id": row[0], "registado_em": row[1], "message": "Cobrança registada com sucesso"}), 201
+    @app.post("/api/cliente-auth/login")
+    def login_cliente():
+        data = request.get_json() or {}
+        empresa_id = data.get("empresa_id")
+        identificador = (data.get("usuario") or "").strip().lower()
+        senha = (data.get("senha") or "").encode("utf-8")
+
+        if not empresa_id or not identificador or not senha:
+            return jsonify({"error": "empresa_id, usuario e senha são obrigatórios"}), 400
+
+        row = db.session.execute(
+            db.text("""
+                SELECT id, empresa_id, nome, documento, telefone, email, endereco,
+                       limite::float, situacao, historico, usuario, senha_hash
+                FROM clientes
+                WHERE empresa_id = :emp
+                  AND (LOWER(usuario) = :ident OR LOWER(email) = :ident)
+                LIMIT 1
+            """),
+            {"emp": empresa_id, "ident": identificador}
+        ).mappings().first()
+
+        if not row:
+            return jsonify({"error": "Credenciais inválidas"}), 401
+
+        stored_hash = row["senha_hash"] or ""
+        valido = False
+        if stored_hash.startswith(""):
+            valido = bcrypt.checkpw(senha, stored_hash.encode("utf-8"))
+        else:
+            valido = (senha.decode("utf-8", errors="ignore") == (stored_hash or "Cliente@2026"))
+
+        if not valido:
+            return jsonify({"error": "Credenciais inválidas"}), 401
+
+        cliente_dict = dict(row)
+        cliente_dict.pop("senha_hash", None)
+        return jsonify({"cliente": cliente_dict})
 
     return app
-
 
 app = create_app()
 
