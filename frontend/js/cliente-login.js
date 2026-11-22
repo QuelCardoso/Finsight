@@ -1,34 +1,45 @@
 async function handleClienteLogin(event) {
     event.preventDefault();
-    const empresaId = Number(document.getElementById("cli-login-empresa").value);
-    const usuario = (document.getElementById("cli-login-usuario").value || "").trim();
-    const senha = document.getElementById("cli-login-senha").value || "";
+    const empresaEl = document.getElementById("cli-login-empresa");
+    const empresaId = Number(empresaEl ? empresaEl.value : (localStorage.getItem(EMPRESA_KEY) || 1));
+    const identificador = (document.getElementById("cli-login-usuario")?.value || "").trim();
+    const senha = (document.getElementById("cli-login-senha")?.value || "").trim();
     const erroEl = document.getElementById("cli-login-erro");
 
-    erroEl.style.display = "none";
-    localStorage.setItem(EMPRESA_KEY, String(empresaId));
+    if (erroEl) erroEl.style.display = "none";
+
+    if (typeof EMPRESA_KEY !== "undefined") {
+        localStorage.setItem(EMPRESA_KEY, String(empresaId));
+    }
     if (typeof syncEmpresaFromApi === "function") {
         await syncEmpresaFromApi(empresaId);
     }
 
     const db = typeof getDB === "function" ? getDB() : {};
     const dados = db[empresaId] || (typeof getEmpresaData === "function" ? getEmpresaData() : {});
-    const usuarioLower = usuario.toLowerCase();
-    const digitosUsuario = usuario.replace(/\D/g, "");
+    const identLower = identificador.toLowerCase();
+    const digitosIdent = identificador.replace(/\D/g, "");
 
     const clienteEncontrado = (dados.clientes || []).find(c => {
-        const bateUser = c.usuario && c.usuario.trim().toLowerCase() === usuarioLower;
-        const bateNome = c.nome && c.nome.trim().toLowerCase() === usuarioLower;
-        const bateEmail = c.email && c.email.trim().toLowerCase() === usuarioLower;
-        const digitosDoc = (c.documento || "").replace(/\D/g, "");
-        const bateDoc = digitosUsuario.length >= 6 && digitosDoc === digitosUsuario;
-        const senhaEsperada = c.senha || "Cliente@2026";
-        return (bateUser || bateNome || bateEmail || bateDoc) && senha === senhaEsperada;
+        const emailCli = (c.email || "").trim().toLowerCase();
+        const digitosTel = (c.telefone || "").replace(/\D/g, "");
+
+        const bateEmail = Boolean(emailCli) && identLower === emailCli;
+        const bateTelefone = digitosIdent.length >= 8 && digitosTel.length >= 8 && (
+            digitosTel === digitosIdent ||
+            digitosTel.endsWith(digitosIdent) ||
+            digitosIdent.endsWith(digitosTel)
+        );
+
+        const senhaEsperada = (c.senha || "Cliente@2026").trim();
+        return (bateEmail || bateTelefone) && senha === senhaEsperada;
     });
 
     if (!clienteEncontrado) {
-        erroEl.innerText = "Login ou senha incorretos.";
-        erroEl.style.display = "block";
+        if (erroEl) {
+            erroEl.innerText = "Login ou senha incorretos.";
+            erroEl.style.display = "block";
+        }
         return;
     }
 
@@ -37,3 +48,19 @@ async function handleClienteLogin(event) {
     sessionStorage.setItem("finsight_modo_cliente_exclusivo", "1");
     window.location.replace("index.html");
 }
+
+(function ajustarCampoLoginCliente() {
+    function aplicarAjustesVisuais() {
+        const label = document.querySelector('label[for="cli-login-usuario"]');
+        if (label) label.innerText = "E-mail ou Telefone do Cliente";
+
+        const input = document.getElementById("cli-login-usuario");
+        if (input) input.placeholder = "Ex.: cliente01@finsight.com ou (75) 99123-4501";
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", aplicarAjustesVisuais);
+    } else {
+        aplicarAjustesVisuais();
+    }
+})();
