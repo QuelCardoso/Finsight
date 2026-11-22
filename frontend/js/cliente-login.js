@@ -11,9 +11,6 @@ async function handleClienteLogin(event) {
     if (typeof EMPRESA_KEY !== "undefined") {
         localStorage.setItem(EMPRESA_KEY, String(empresaId));
     }
-    if (typeof syncEmpresaFromApi === "function") {
-        await syncEmpresaFromApi(empresaId);
-    }
 
     const db = typeof getDB === "function" ? getDB() : {};
     const dados = db[empresaId] || (typeof getEmpresaData === "function" ? getEmpresaData() : {});
@@ -49,18 +46,9 @@ async function handleClienteLogin(event) {
     window.location.replace("index.html");
 }
 
-(function ajustarCampoLoginCliente() {
-    function aplicarAjustesVisuais() {
-        const label = document.querySelector('label[for="cli-login-usuario"]');
-        if (label) label.innerText = "E-mail ou Telefone do Cliente";
-
-        const input = document.getElementById("cli-login-usuario");
-        if (input) input.placeholder = "Ex.: cliente01@finsight.com ou (75) 99123-4501";
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", aplicarAjustesVisuais);
-    } else {
-        aplicarAjustesVisuais();
-    }
-})();
+document.addEventListener("DOMContentLoaded", () => {
+    const label = document.querySelector('label[for="cli-login-usuario"]');
+    if (label) label.innerText = "E-mail ou Telefone do Cliente";
+    const input = document.getElementById("cli-login-usuario");
+    if (input) input.placeholder = "Ex.: cliente01@gmail.com ou (75) 99123-4501";
+});
